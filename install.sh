@@ -36,8 +36,8 @@ LOG_PATH="/var/log/pterodactyl-installer-br.log"
 
 # check for curl
 if ! [ -x "$(command -v curl)" ]; then
-  echo "* curl is required in order for this script to work."
-  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
+  echo "* curl é necessário para que este script funcione."
+  echo "* instale usando apt (Debian e derivados) ou yum/dnf (CentOS)"
   exit 1
 fi
 
@@ -48,19 +48,19 @@ curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/master/lib/lib.sh
 source /tmp/lib.sh
 
 execute() {
-  echo -e "\n\n* pterodactyl-installer $(date) \n\n" >>$LOG_PATH
+  echo -e "\n\n* pterodactyl-installer-br $(date) \n\n" >>$LOG_PATH
 
   [[ "$1" == *"canary"* ]] && export GITHUB_SOURCE="master" && export SCRIPT_RELEASE="canary"
   update_lib_source
   run_ui "${1//_canary/}" |& tee -a $LOG_PATH
 
   if [[ -n $2 ]]; then
-    echo -e -n "* Installation of $1 completed. Do you want to proceed to $2 installation? (y/N): "
+    echo -e -n "* A instalação de $1 foi concluída. Deseja prosseguir para a instalação de $2? (s/N): "
     read -r CONFIRM
-    if [[ "$CONFIRM" =~ [Yy] ]]; then
+    if [[ "$CONFIRM" =~ [Ss] ]]; then
       execute "$2"
     else
-      error "Installation of $2 aborted."
+      error "Instalação de $2 abortada."
       exit 1
     fi
   fi
@@ -71,15 +71,15 @@ welcome ""
 done=false
 while [ "$done" == false ]; do
   options=(
-    "Install the panel"
-    "Install Wings"
-    "Install both [0] and [1] on the same machine (wings script runs after panel)"
-    # "Uninstall panel or wings\n"
+    "Instalar o painel"
+    "Instalar Wings"
+    "Instalar ambos [0] e [1] na mesma máquina (o script wings roda após o painel)"
+    # "Desinstalar painel ou wings\n"
 
-    "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
-    "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
-    "Install both [3] and [4] on the same machine (wings script runs after panel)"
-    "Uninstall panel or wings with canary version of the script (the versions that lives in master, may be broken!)"
+    "Instalar painel com versão canary do script (versões no branch master, podem estar instáveis!)"
+    "Instalar Wings com versão canary do script (versões no branch master, podem estar instáveis!)"
+    "Instalar ambos [3] e [4] na mesma máquina (o script wings roda após o painel)"
+    "Desinstalar painel ou wings com versão canary do script (versões no branch master, podem estar instáveis!)"
   )
 
   actions=(
@@ -94,19 +94,19 @@ while [ "$done" == false ]; do
     "uninstall_canary"
   )
 
-  output "What would you like to do?"
+  output "O que você gostaria de fazer?"
 
   for i in "${!options[@]}"; do
     output "[$i] ${options[$i]}"
   done
 
-  echo -n "* Input 0-$((${#actions[@]} - 1)): "
+  echo -n "* Digite um número de 0 a $((${#actions[@]} - 1)): "
   read -r action
 
-  [ -z "$action" ] && error "Input is required" && continue
+  [ -z "$action" ] && error "Entrada é obrigatória" && continue
 
   valid_input=("$(for ((i = 0; i <= ${#actions[@]} - 1; i += 1)); do echo "${i}"; done)")
-  [[ ! " ${valid_input[*]} " =~ ${action} ]] && error "Invalid option"
+  [[ ! " ${valid_input[*]} " =~ ${action} ]] && error "Opção inválida"
   [[ " ${valid_input[*]} " =~ ${action} ]] && done=true && IFS=";" read -r i1 i2 <<<"${actions[$action]}" && execute "$i1" "$i2"
 done
 
