@@ -28,37 +28,27 @@ set -e
 #                                                                                    #
 ######################################################################################
 
-export GITHUB_SOURCE="v1.0.1"
-export SCRIPT_RELEASE="v1.0.1"
-export GITHUB_BASE_URL="https://raw.githubusercontent.com/Slyvok/Script-Pterodactyl-BR/main"
+export GITHUB_SOURCE="v1.1.1"
+export SCRIPT_RELEASE="v1.1.1"
+export GITHUB_BASE_URL="https://raw.githubusercontent.com/pterodactyl-installer/pterodactyl-installer"
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
 
-# Verifica se o curl está instalado
-if ! command -v curl >/dev/null 2>&1; then
+# verifica se o curl está instalado
+if ! [ -x "$(command -v curl)" ]; then
   echo "* O curl é necessário para que este script funcione."
   echo "* Instale usando apt (Debian e derivados) ou yum/dnf (CentOS)"
   exit 1
 fi
 
-# Baixa o lib.sh com validação
-[ -f /tmp/lib.sh ] && rm -f /tmp/lib.sh
-
-echo "* Baixando lib.sh do repositório..."
-curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL/lib/lib.sh"
-
-
-# Verifica se o lib.sh baixou corretamente
-if [ ! -s /tmp/lib.sh ] || ! grep -q '#!/bin/bash' /tmp/lib.sh; then
-  echo "* Erro ao baixar ou validar o lib.sh. Verifique sua conexão ou URL do repositório."
-  exit 1
-fi
-
-# Importa a biblioteca
+# Sempre remove lib.sh antes de baixá-lo
+[ -f /tmp/lib.sh ] && rm -rf /tmp/lib.sh
+curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/master/lib/lib.sh
+# shellcheck source=lib/lib.sh
 source /tmp/lib.sh
 
 execute() {
-  echo -e "\n\n* instalador-pterodactyl $(date) \n\n" >>$LOG_PATH
+  echo -e "\n\n* pterodactyl-installer $(date) \n\n" >>$LOG_PATH
 
   [[ "$1" == *"canary"* ]] && export GITHUB_SOURCE="master" && export SCRIPT_RELEASE="canary"
   update_lib_source
@@ -83,17 +73,21 @@ while [ "$done" == false ]; do
   options=(
     "Instalar o painel"
     "Instalar Wings"
-    "Instalar ambos [0] e [1] na mesma máquina (o script do wings roda após o painel)"
-    "Instalar painel com versão canary do script (versões que estão no master, podem estar instáveis!)"
-    "Instalar Wings com versão canary do script (versões que estão no master, podem estar instáveis!)"
-    "Instalar ambos [3] e [4] na mesma máquina (o script do wings roda após o painel)"
-    "Desinstalar painel ou wings com versão canary do script (versões que estão no master, podem estar instáveis!)"
+    "Instalar ambos [0] e [1] na mesma máquina (o script do Wings roda após o painel)"
+    # "Desinstalar painel ou wings\n"
+
+    "Instalar painel com a versão canary do script (versões no master, podem estar instáveis!)"
+    "Instalar Wings com a versão canary do script (versões no master, podem estar instáveis!)"
+    "Instalar ambos [3] e [4] na mesma máquina (o script do Wings roda após o painel)"
+    "Desinstalar painel ou wings com a versão canary do script (versões no master, podem estar instáveis!)"
   )
 
   actions=(
     "panel"
     "wings"
     "panel;wings"
+    # "uninstall"
+
     "panel_canary"
     "wings_canary"
     "panel_canary;wings_canary"
@@ -106,7 +100,7 @@ while [ "$done" == false ]; do
     output "[$i] ${options[$i]}"
   done
 
-  echo -n "* Digite uma opção de 0-$((${#actions[@]} - 1)): "
+  echo -n "* Digite um número de 0 a $((${#actions[@]} - 1)): "
   read -r action
 
   [ -z "$action" ] && error "Entrada é obrigatória" && continue
@@ -116,5 +110,5 @@ while [ "$done" == false ]; do
   [[ " ${valid_input[*]} " =~ ${action} ]] && done=true && IFS=";" read -r i1 i2 <<<"${actions[$action]}" && execute "$i1" "$i2"
 done
 
-# Remove lib.sh para que na próxima execução o script baixe a versão mais recente
-rm -f /tmp/lib.sh
+# Remove lib.sh, assim na próxima execução do script a versão mais nova será baixada
+rm -rf /tmp/lib.sh
