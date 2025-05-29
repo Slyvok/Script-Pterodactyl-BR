@@ -30,7 +30,7 @@ set -e
 
 export GITHUB_SOURCE="v1.0.1"
 export SCRIPT_RELEASE="v1.0.1"
-export GITHUB_BASE_URL="https://raw.githubusercontent.com/Slyvok/Script-Pterodactyl-BR"
+export GITHUB_BASE_URL="https://raw.githubusercontent.com/Slyvok/Script-Pterodactyl-BR/main"
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
 
@@ -45,7 +45,8 @@ fi
 [ -f /tmp/lib.sh ] && rm -f /tmp/lib.sh
 
 echo "* Baixando lib.sh do repositório..."
-curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/master/lib/lib.sh
+curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL/lib/lib.sh"
+
 
 # Verifica se o lib.sh baixou corretamente
 if [ ! -s /tmp/lib.sh ] || ! grep -q '#!/bin/bash' /tmp/lib.sh; then
