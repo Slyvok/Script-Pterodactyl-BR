@@ -34,17 +34,26 @@ export GITHUB_BASE_URL="https://raw.githubusercontent.com/Slyvok/Script-Pterodac
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
 
-# verifica se o curl está instalado
-if ! [ -x "$(command -v curl)" ]; then
+# Verifica se o curl está instalado
+if ! command -v curl >/dev/null 2>&1; then
   echo "* O curl é necessário para que este script funcione."
   echo "* Instale usando apt (Debian e derivados) ou yum/dnf (CentOS)"
   exit 1
 fi
 
-# Sempre remove lib.sh antes de baixá-lo
-[ -f /tmp/lib.sh ] && rm -rf /tmp/lib.sh
+# Baixa o lib.sh com validação
+[ -f /tmp/lib.sh ] && rm -f /tmp/lib.sh
+
+echo "* Baixando lib.sh do repositório..."
 curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/master/lib/lib.sh
-# shellcheck source=lib/lib.sh
+
+# Verifica se o lib.sh baixou corretamente
+if [ ! -s /tmp/lib.sh ] || ! grep -q '#!/bin/bash' /tmp/lib.sh; then
+  echo "* Erro ao baixar ou validar o lib.sh. Verifique sua conexão ou URL do repositório."
+  exit 1
+fi
+
+# Importa a biblioteca
 source /tmp/lib.sh
 
 execute() {
@@ -74,8 +83,6 @@ while [ "$done" == false ]; do
     "Instalar o painel"
     "Instalar Wings"
     "Instalar ambos [0] e [1] na mesma máquina (o script do wings roda após o painel)"
-    # "Desinstalar painel ou wings\n"
-
     "Instalar painel com versão canary do script (versões que estão no master, podem estar instáveis!)"
     "Instalar Wings com versão canary do script (versões que estão no master, podem estar instáveis!)"
     "Instalar ambos [3] e [4] na mesma máquina (o script do wings roda após o painel)"
@@ -86,8 +93,6 @@ while [ "$done" == false ]; do
     "panel"
     "wings"
     "panel;wings"
-    # "uninstall"
-
     "panel_canary"
     "wings_canary"
     "panel_canary;wings_canary"
@@ -111,4 +116,4 @@ while [ "$done" == false ]; do
 done
 
 # Remove lib.sh para que na próxima execução o script baixe a versão mais recente
-rm -rf /tmp/lib.sh
+rm -f /tmp/lib.sh
